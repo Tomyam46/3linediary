@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3行日記</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f0eb;
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', '游明朝', Georgia, serif;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fffdf9;
+      border-radius: 16px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .date {
+      font-size: 13px;
+      color: #a89880;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 26px;
+      color: #3a2e22;
+      font-weight: normal;
+      letter-spacing: 0.15em;
+    }
+
+    h1 span {
+      font-size: 13px;
+      display: block;
+      color: #b0a090;
+      margin-top: 4px;
+      letter-spacing: 0.2em;
+    }
+
+    .divider {
+      width: 40px;
+      height: 1px;
+      background: #d4c8b8;
+      margin: 20px auto 0;
+    }
+
+    .field {
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #7a6a58;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+    }
+
+    label .num {
+      width: 20px;
+      height: 20px;
+      background: #e8dfd4;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #8a7a68;
+      flex-shrink: 0;
+    }
+
+    textarea {
+      width: 100%;
+      border: 1px solid #e0d8cc;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 15px;
+      font-family: inherit;
+      color: #3a2e22;
+      background: #faf7f3;
+      resize: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      line-height: 1.6;
+    }
+
+    textarea::placeholder {
+      color: #c8bfb0;
+      font-size: 14px;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #b8a898;
+      box-shadow: 0 0 0 3px rgba(184,168,152,0.15);
+      background: #fffdf9;
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 11px;
+      color: #c0b0a0;
+      margin-top: 4px;
+    }
+
+    .char-count.over {
+      color: #c0604a;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      background: #5c4d3c;
+      color: #fffdf9;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      letter-spacing: 0.15em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      background: #4a3d2e;
+    }
+
+    button:active {
+      transform: scale(0.99);
+    }
+
+    button:disabled {
+      background: #c0b0a0;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.success {
+      background: #3a2e22;
+      color: #fffdf9;
+    }
+
+    .toast.error {
+      background: #8b3a2a;
+      color: #fffdf9;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 32px;
+      font-size: 11px;
+      color: #c8bfb0;
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <div class="date" id="today-date"></div>
+      <h1>3行日記<span>Three-line Diary</span></h1>
+      <div class="divider"></div>
+    </header>
+
+    <form id="diary-form">
+      <div class="field">
+        <label><span class="num">1</span>今日あったこと</label>
+        <textarea id="happened" rows="3" placeholder="今日起きたできごとを書いてみましょう…" maxlength="200"></textarea>
+        <div class="char-count"><span id="c1">0</span> / 200</div>
+      </div>
+
+      <div class="field">
+        <label><span class="num">2</span>感じたこと</label>
+        <textarea id="felt" rows="3" placeholder="今日感じた気持ちや気づきを…" maxlength="200"></textarea>
+        <div class="char-count"><span id="c2">0</span> / 200</div>
+      </div>
+
+      <div class="field">
+        <label><span class="num">3</span>明日に向けてのひとこと</label>
+        <textarea id="tomorrow" rows="3" placeholder="明日の自分へひとことメッセージ…" maxlength="200"></textarea>
+        <div class="char-count"><span id="c3">0</span> / 200</div>
+      </div>
+
+      <button type="submit" id="submit-btn">Notionに保存する</button>
+    </form>
+
+    <footer>書いた日記はNotionデータベースに記録されます</footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // 今日の日付を表示
+    const dateEl = document.getElementById('today-date');
+    const now = new Date();
+    const days = ['日', '月', '火', '水', '木', '金', '土'];
+    dateEl.textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${days[now.getDay()]}）`;
+
+    // 文字数カウント
+    function setupCounter(textareaId, countId) {
+      const ta = document.getElementById(textareaId);
+      const counter = document.getElementById(countId);
+      ta.addEventListener('input', () => {
+        const len = ta.value.length;
+        counter.textContent = len;
+        counter.parentElement.classList.toggle('over', len >= 200);
+      });
+    }
+    setupCounter('happened', 'c1');
+    setupCounter('felt', 'c2');
+    setupCounter('tomorrow', 'c3');
+
+    // トースト通知
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    }
+
+    // フォーム送信
+    document.getElementById('diary-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const happened = document.getElementById('happened').value.trim();
+      const felt = document.getElementById('felt').value.trim();
+      const tomorrow = document.getElementById('tomorrow').value.trim();
+
+      if (!happened || !felt || !tomorrow) {
+        showToast('3つのフィールドをすべて入力してください', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '保存中…';
+
+      try {
+        const res = await fetch('/api/diary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ happened, felt, tomorrow })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          showToast('Notionに保存しました ✓');
+          document.getElementById('happened').value = '';
+          document.getElementById('felt').value = '';
+          document.getElementById('tomorrow').value = '';
+          ['c1','c2','c3'].forEach(id => document.getElementById(id).textContent = '0');
+        } else {
+          showToast(data.error || '送信に失敗しました', 'error');
+        }
+      } catch {
+        showToast('ネットワークエラーが発生しました', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Notionに保存する';
+      }
+    });
+  </script>
+</body>
+</html>
